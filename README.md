@@ -2,8 +2,6 @@
 
 **RustBase** is a self-hosted backend platform built in Rust, designed to give developers the flexibility of Firebase or Supabase while keeping **full control over your cloud/deployment environment**. It provides common backend features out-of-the-box while allowing you to build your own UI and custom business logic on top.
 
----
-
 ## Features
 
 - **OAuth Integration**  
@@ -28,4 +26,18 @@
   - Control over deployment, cloud environment, and services
   - More flexible than managed services like Supabase
 
----
+## Status
+
+Early development — contributions welcome!
+
+## Contributing
+
+Fork the repo and create a feature branch.
+
+Submit a pull request with improvements or bug fixes.
+
+Open issues for suggestions or questions.
+
+## License
+
+This project is licensed under the Apache 2.0 License. See the [LICENSE](LICENSE) file for details.
