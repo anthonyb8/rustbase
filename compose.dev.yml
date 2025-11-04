@@ -1,0 +1,140 @@
+services:
+  # Storage
+  postgres: 
+    image: postgres:16 
+    volumes: 
+      - postgres-data:/var/lib/pgsql/data
+    environment:
+      - POSTGRES_USER=test_user  
+      - POSTGRES_PASSWORD=test_pass 
+      - POSTGRES_DB=test_db
+    networks:
+      - backend-net
+      - db-net
+    profiles:
+      - dev_psql
+      - dev_backend
+      - dev
+
+  dbmate:
+    image: amacneil/dbmate
+    depends_on:
+      - postgres
+    environment:
+      - DATABASE_URL=postgres://test_user:test_pass@postgres:5432/test_db?sslmode=disable
+    volumes:
+      - ./db/migrations:/db/migrations
+    networks:
+      - db-net
+    profiles:
+      - dev_psql
+      - dev_backend
+      - dev 
+    command: ["--wait","up"]
+
+  redis:
+    image: redis:7
+    volumes:
+      - redis-data:/data
+    command: redis-server --save 60 1 --loglevel warning
+    networks:
+      - backend-net
+
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000" 
+      - "9001:9001" 
+    volumes:
+      - minio-data:/data 
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadminpassword
+    command: server /data --console-address ":9001"
+
+  nginx-proxy:
+    image: nginx:stable-alpine
+    container_name: nginx_proxy
+    ports:
+      - 80:80
+      - "443:443"
+    depends_on:
+      - backend
+      # - frontend
+    volumes:
+      - ./certs:/certs:ro
+      - ./nginx/nginx.dev.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - frontend-net
+      - backend-net
+    profiles:
+      - dev
+      - dev_backend
+
+  # Application
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile.dev 
+    environment: 
+      - PSQL_HOST=postgres
+      - PSQL_PORT=5432
+      - PSQL_USER=test_user 
+      - PSQL_DB=test_db
+    env_file:
+      - .env
+    volumes:
+      - ./scripts/wait-for-db.sh:/scripts/wait-for-db.sh
+      - ./logs:/logs
+      - ./backend/src:/app/src
+    networks:
+      - backend-net 
+      - frontend-net
+    profiles:
+      - dev_psql
+      - dev_backend
+      - dev 
+    ports:
+      - 8080:8080
+    entrypoint: ["/scripts/wait-for-db.sh"]
+    command: ["cargo", "watch", "-x", "run"]
+
+  # frontend:
+  #   build: ./frontend
+  #   environment:
+  #     - BACKEND_URL=http://backend_dev:8000
+  #     - VITE_API_BASE_URL=http://localhost:8000
+  #   ports:
+  #     - 5173:5173
+  #   networks:
+  #     - frontend-net
+  #   profiles:
+  #     - dev 
+  #     - dev_frontend
+  #   volumes:
+  #     - ./scripts/wait-for-backend.sh:/scripts/wait-for-backend.sh
+  #   develop:
+  #     watch:
+  #       - path: ./frontend/src
+  #         target: /frontend/src
+  #         action: sync+restart
+  #   entrypoint: ["/scripts/wait-for-backend.sh"]
+  #   command: > 
+  #     sh -c " 
+  #       npm run dev -- --host 0.0.0.0 --port 5173
+  #     "
+
+volumes: 
+  postgres-data:
+  redis-data:
+  minio-data:
+
+networks:
+  frontend-net:
+    driver: bridge
+ 
+  db-net:
+    driver: bridge
+
+  backend-net:
+    driver: bridge

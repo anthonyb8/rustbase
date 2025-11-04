@@ -1,0 +1,15 @@
+meta {
+  name: auth-link
+  type: http
+  seq: 1
+}
+
+get {
+  url: https://localhost/slack/oauth/authenticate/2
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

@@ -1,0 +1,129 @@
+services:
+  dbmate:
+    image: amacneil/dbmate
+    depends_on:
+      - mysql_db
+    env_file: 
+      - .env
+    environment:
+      - DATABASE_URL=${DBMATE_DATABASE_URL}
+    networks:
+      - db-net
+    profiles:
+      - dev 
+      - prod
+    volumes:
+      - ./db/migrations:/db/migrations
+    command: ["--wait","up"]
+
+  backend: 
+    build: ./backend
+    env_file: 
+      - .env
+    environment:
+      - DATABASE_URL=${BACKEND_DATABASE_URL}
+    networks:
+      - backend-net 
+      - frontend-net
+    profiles:
+      - dev 
+      - prod
+    volumes:
+      - ./scripts/wait-for-db.sh:/scripts/wait-for-db.sh
+    entrypoint: ["/scripts/wait-for-db.sh"]
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "5000"]
+
+  frontend-builder:
+    build: ./frontend
+    env_file: 
+      - .env
+    profiles:
+      - dev 
+      - prod
+    volumes:
+      - frontend_dist:/dist
+    command: >
+      sh -c "
+        npm run build &&
+        cp -r dist/. /dist
+      "
+
+  nginx-dev:
+    image: nginx:stable-alpine
+    ports:
+      - 8000:80
+    profiles:
+      - dev
+    networks:
+      - frontend-net
+    volumes:
+      - frontend_dist:/usr/share/nginx/html:ro
+      - ./nginx/nginx.dev.conf:/etc/nginx/conf.d/default.conf:ro
+
+  nginx-setup:
+    image: nginx:alpine
+    ports:
+      - 80:80
+    env_file:
+      - .env
+    profiles:
+      - staging
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - certbot-www:/var/www/certbot
+      - frontend_dist:/usr/share/nginx/html:ro
+      - ./nginx/nginx.setup.conf:/etc/nginx/templates/nginx.conf.template
+
+  certbot-setup:
+    image: certbot/certbot
+    env_file:
+      - .env
+    depends_on: 
+      - nginx-setup
+    profiles:
+      - staging
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - certbot-www:/var/www/certbot
+      - ./scripts/cert_check.sh:/scripts/cert_check.sh:ro
+    entrypoint: ["sh"]
+    command: ["/scripts/cert_check.sh"]
+  
+  nginx-prod:
+    image: nginx:alpine 
+    ports:
+      - 80:80
+      - 443:443
+    env_file:
+      - .env
+    profiles:
+      - prod
+    networks:
+      - frontend-net
+    depends_on:
+      - backend
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - certbot-www:/var/www/certbot
+      - frontend_dist:/usr/share/nginx/html:ro
+      - ./nginx/nginx.prod.conf:/etc/nginx/templates/nginx.conf.template
+
+volumes: 
+  frontend_dist:
+  mysql_data:
+  certbot-etc:
+  certbot-var:
+  certbot-www:
+
+networks:
+  frontend-net:
+    driver: bridge
+ 
+  db-net:
+    driver: bridge
+
+  backend-net:
+    driver: bridge

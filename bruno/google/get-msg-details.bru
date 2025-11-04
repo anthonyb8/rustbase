@@ -1,0 +1,19 @@
+meta {
+  name: get-msg-details
+  type: http
+  seq: 4
+}
+
+get {
+  url: https://localhost/google/gmail/message/2?id=19a16ba1a0b829b7
+  body: none
+  auth: inherit
+}
+
+params:query {
+  id: 19a16ba1a0b829b7
+}
+
+settings {
+  encodeUrl: true
+}
