@@ -1,15 +1,20 @@
 meta {
   name: get-gmail-msgs
   type: http
-  seq: 3
+  seq: 1
 }
 
 get {
-  url: https://localhost/google/gmail/messages/2
+  url: https://localhost/integrations/google/gmail/messages
   body: none
-  auth: inherit
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI4ZGUzZTUxOS00YTg3LTRlOWItOWFjNC04YmRhZGUzMmU2MjgiLCJtZmFfdmVyaWZpZWQiOnRydWUsImV4cCI6MTc2MjM4MDIyNSwiaWF0IjoxNzYyMzc4NDI1fQ.2WINBp25peDSaghW-tdFSlRfb2AzyLIRDoqFx4a6NTs
 }
 
 settings {
   encodeUrl: true
+  timeout: 0
 }

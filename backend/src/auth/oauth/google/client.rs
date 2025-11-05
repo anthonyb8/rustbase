@@ -4,6 +4,7 @@ use crate::error::Result;
 use oauth2::{basic::BasicClient, StandardRevocableToken, TokenResponse};
 use oauth2::{reqwest, AccessToken, PkceCodeVerifier, RefreshToken};
 use oauth2::{AuthorizationCode, CsrfToken, PkceCodeChallenge, RedirectUrl, RevocationUrl, Scope};
+use sqlx::types::Uuid;
 
 #[derive(Debug, Clone)]
 pub struct GoogleOauth {
@@ -30,7 +31,7 @@ impl GoogleOauth {
         })
     }
 
-    pub fn get_authorization_url(&self, id: i32) -> AuthorizationFlow {
+    pub fn get_authorization_url(&self, id: Uuid) -> AuthorizationFlow {
         let csrf_state = CsrfToken::new_random();
         let composite_state = format!("{}:{}", id, csrf_state.secret());
         let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();

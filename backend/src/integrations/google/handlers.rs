@@ -1,22 +1,26 @@
 use super::data::MessageQuery;
+use crate::crypt::jwt::Claims;
 use crate::data::Token;
 use crate::error::Result;
+use crate::response::ApiResponse;
 use crate::state::AppState;
-use axum::extract::{Path, Query, State};
+use axum::extract::{Query, State};
+use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::{self};
-use serde::Deserialize;
+use axum::{self, Extension};
 use std::sync::Arc;
 
 // Gmail
 pub async fn gmail_messages(
     State(state): State<Arc<AppState>>,
-    Path(user_id): Path<i32>,
+    Extension(claims): Extension<Claims>,
 ) -> Result<impl IntoResponse> {
+    // let user_id = Uuid::parse_str(&claims.sub)?;
+
     let token: Token = state
         .storage
         .redis
-        .get_oauth_tokens(user_id, "google")
+        .get_oauth_tokens(&claims.sub, "google")
         .await?;
 
     let messages = state
@@ -25,20 +29,23 @@ pub async fn gmail_messages(
         .get_gmail_messages(&token.access_token, 10)
         .await?;
 
-    println!("{:?}", messages);
-
-    Ok(())
+    Ok(ApiResponse::new(
+        "",
+        "Password updated successfully",
+        StatusCode::OK,
+        messages,
+    ))
 }
 
 pub async fn gmail_message(
     State(state): State<Arc<AppState>>,
-    Path(user_id): Path<i32>,
+    Extension(claims): Extension<Claims>,
     Query(query): Query<MessageQuery>,
 ) -> Result<impl IntoResponse> {
     let token: Token = state
         .storage
         .redis
-        .get_oauth_tokens(user_id, "google")
+        .get_oauth_tokens(&claims.sub, "google")
         .await?;
 
     let message = state
@@ -46,7 +53,11 @@ pub async fn gmail_message(
         .google
         .get_message_details(&token.access_token, &query.id)
         .await?;
-    println!("{:?}", message);
 
-    Ok(())
+    Ok(ApiResponse::new(
+        "",
+        "Password updated successfully",
+        StatusCode::OK,
+        message,
+    ))
 }

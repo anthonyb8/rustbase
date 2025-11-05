@@ -27,6 +27,8 @@ impl MicrosoftClient {
             .bearer_auth(access_token)
             .send()
             .await?;
+
+        println!("{:?}", resp);
         // let messages: GmailList = resp.json().await?;
 
         Ok(())

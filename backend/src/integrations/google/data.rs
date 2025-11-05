@@ -27,7 +27,7 @@ pub struct GmailMessage {
     thread_id: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct EmailMessage {
     pub id: String,
     pub from: String,

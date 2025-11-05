@@ -6,12 +6,15 @@ use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::{self};
+use sqlx::types::Uuid;
 use std::sync::Arc;
 
 pub async fn get_authentication_url(
     State(state): State<Arc<AppState>>,
-    Path(user_id): Path<i32>,
+    Path(id): Path<String>,
 ) -> Result<impl IntoResponse> {
+    let user_id: Uuid = Uuid::parse_str(&id)?;
+
     let auth = state.oauth.google.get_authorization_url(user_id);
 
     let flow = Flow {
@@ -32,7 +35,6 @@ pub async fn google_callback(
     State(state): State<Arc<AppState>>,
     Query(params): Query<AuthRequest>,
 ) -> Result<impl IntoResponse> {
-    println!("hellllllllll");
     // Split `id:csrf_token`
     let parts: Vec<&str> = params.state.split(':').collect();
     if parts.len() != 2 {

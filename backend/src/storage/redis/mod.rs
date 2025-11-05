@@ -55,7 +55,7 @@ impl RedisClient {
         Ok(Uuid::parse_str(&user_id)?)
     }
 
-    pub async fn store_flow(&self, user_id: i32, platform: &str, flow: &Flow) -> Result<()> {
+    pub async fn store_flow(&self, user_id: Uuid, platform: &str, flow: &Flow) -> Result<()> {
         let key = format!("oauth:{}:{}:flow", user_id, platform);
         let value = serde_json::to_string(flow)?;
         let _: () = self.conn.clone().set(key, value).await?;
@@ -88,7 +88,7 @@ impl RedisClient {
         Ok(())
     }
 
-    pub async fn get_oauth_tokens(&self, user_id: i32, platform: &str) -> Result<Token> {
+    pub async fn get_oauth_tokens(&self, user_id: &str, platform: &str) -> Result<Token> {
         let key = format!("oauth:{}:{}", user_id, platform);
         let value: String = self.conn.clone().get(key).await?;
         let token: Token = serde_json::from_str(&value)?;

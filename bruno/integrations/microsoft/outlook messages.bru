@@ -1,17 +1,13 @@
 meta {
-  name: get-msg-details
+  name: outlook messages
   type: http
-  seq: 2
+  seq: 3
 }
 
 get {
-  url: https://localhost/integrations/google/gmail/message?id=19a16ba1a0b829b7
+  url: https://localhost/integrations/microsoft/outlook/messages
   body: none
   auth: bearer
-}
-
-params:query {
-  id: 19a16ba1a0b829b7
 }
 
 auth:bearer {

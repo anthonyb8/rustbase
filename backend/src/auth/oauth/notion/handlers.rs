@@ -10,12 +10,14 @@ use axum::{
     response::IntoResponse,
 };
 use reqwest::StatusCode;
+use sqlx::types::Uuid;
 use std::sync::Arc;
 
 pub async fn get_authentication_url(
     State(state): State<Arc<AppState>>,
-    Path(user_id): Path<i32>,
+    Path(id): Path<String>,
 ) -> Result<impl IntoResponse> {
+    let user_id: Uuid = Uuid::parse_str(&id)?;
     let auth = state.oauth.notion.get_authorization_url(user_id);
 
     let flow = Flow {

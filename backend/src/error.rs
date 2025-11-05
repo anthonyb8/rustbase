@@ -4,7 +4,6 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use oauth2::basic::BasicErrorResponseType;
-use sqlx::types::Uuid;
 use std::{num::ParseIntError, time::SystemTimeError};
 use thiserror::Error;
 
