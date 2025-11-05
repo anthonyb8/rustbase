@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-sqlx = { version = "0.8.6", features = ["postgres", "runtime-tokio-rustls", "macros", "json", "chrono"] }
+sqlx = { version = "0.8.6", features = ["postgres", "runtime-tokio-rustls","uuid", "macros", "json", "chrono"] }
 tokio = { version = "1.47.1", features = ["full"] }
-axum = { version = "0.8.6" }
+axum = { version = "0.8.6", features=["multipart"] }
 thiserror = "2.0.16"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter", "json"] }
@@ -36,7 +36,6 @@ oauth2 = { version = "5.0.0", default-features = false, features = ["reqwest-blo
 reqwest = {version = "0.12.23", features = ["json"]}
 url = "2.5.7"
 object_store = {version="0.12.4", features=["aws", "gcp"]}
-# ngrok = { version = "0.16.0", features = ["aws-lc-rs",  "hyper"] }
 redis = { version = "0.32.7", features = ["tokio-comp"] }
 
 [dev-dependencies]

@@ -1,0 +1,19 @@
+meta {
+  name: upload
+  type: http
+  seq: 1
+}
+
+post {
+  url: https://localhost/examples/upload/file/1
+  body: multipartForm
+  auth: inherit
+}
+
+body:multipart-form {
+  file: @file(/home/anthony/snap/bruno/89/Downloads/sample.pdf)
+}
+
+settings {
+  encodeUrl: true
+}

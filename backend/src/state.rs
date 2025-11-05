@@ -1,6 +1,7 @@
+use crate::auth::oauth::service::OAuthClient;
 use crate::config::CONFIG;
 use crate::error::Result;
-use crate::oauth::ServicesClient;
+use crate::integrations::service::IntegrationClient;
 use crate::smtp::service::EmailService;
 use crate::storage::StorageClient;
 
@@ -8,7 +9,8 @@ use crate::storage::StorageClient;
 pub struct AppState {
     pub storage: StorageClient,
     pub smtp: EmailService,
-    pub services: ServicesClient,
+    pub integration: IntegrationClient,
+    pub oauth: OAuthClient,
 }
 
 impl AppState {
@@ -23,7 +25,8 @@ impl AppState {
                 &config.smtp_email_pw,
                 &config.smtp_email_relay,
             )?,
-            services: ServicesClient::new().await?,
+            integration: IntegrationClient::new().await?,
+            oauth: OAuthClient::new().await?,
         })
     }
 }

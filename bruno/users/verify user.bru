@@ -1,0 +1,15 @@
+meta {
+  name: verify user
+  type: http
+  seq: 6
+}
+
+patch {
+  url: https://localhost/users/patch/is-verified/5
+  body: json
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

@@ -7,7 +7,7 @@ use serde_json::json;
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct ApiResponse<T> {
-    pub status: String,
+    // pub status: String,
     pub message: String,
     pub code: u16,
     pub data: T,
@@ -16,7 +16,7 @@ pub struct ApiResponse<T> {
 impl<T: Serialize> ApiResponse<T> {
     pub fn new(status: &str, message: &str, code: StatusCode, data: T) -> Self {
         Self {
-            status: status.to_string(),
+            // status: status.to_string(),
             message: message.to_string(),
             code: code.as_u16(),
             data,
@@ -30,8 +30,8 @@ impl<T: Serialize> IntoResponse for ApiResponse<T> {
         let body = axum::Json(json!({
             "message": self.message,
             "data": self.data,
-            "status": self.status,
             "code": self.code,
+            // "status": self.status,
         }));
         (status, body).into_response()
     }

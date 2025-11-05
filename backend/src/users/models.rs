@@ -1,45 +1,109 @@
-use crate::Result;
-use chrono::{DateTime, Utc};
+use crate::{crypt::hash::hash_password, Error, Result};
 use serde::{Deserialize, Serialize};
-use sqlx::{Postgres, Row, Transaction};
-use std::ops::DerefMut;
-use tracing::info;
+use sqlx::prelude::FromRow;
 
-#[derive(sqlx::FromRow, Clone, Serialize, Deserialize, Debug)]
-pub struct User {
-    id: Option<i32>,
-    email: String,
-    password_hash: String,
-    authenticator_mfa_enabled: bool,
-    mfa_secret: String,
-    is_verified: bool,
-    created_at: DateTime<Utc>,
-    updated_at: DateTime<Utc>,
+#[derive(Debug, Deserialize)]
+pub struct UpdateEmailPayload {
+    pub email: String,
 }
+
+#[derive(Debug, Deserialize)]
+pub struct UpdatePasswordPayload {
+    pub password: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct User {
+    pub id: Option<i32>,
+    pub email: String,
+    pub first_name: String,
+    pub last_name: String,
+    pub password_hash: String,
+}
+
 impl User {
-    pub async fn create(&self, tx: &mut Transaction<'_, Postgres>) -> Result<i32> {
-        println!("hello");
-        info!("Inserting new instrument: {:?}", self);
-
-        let result = sqlx::query(
-            r#"
-            INSERT INTO users (email, password_hash, is_verified)
-            VALUES ($1, $2, $3)
-            RETURNING id
-            "#,
-        )
-        .bind(&self.email)
-        .bind(&self.password_hash)
-        .bind(&self.is_verified)
-        .fetch_one(tx.deref_mut())
-        .await?;
-
-        let id: i32 = result.try_get("id")?;
-
-        info!("Successfully created user with id: {}", id);
-        Ok(id)
+    pub fn new(
+        id: Option<i32>,
+        email: &str,
+        first_name: &str,
+        last_name: &str,
+        password: &str,
+    ) -> Result<User> {
+        Ok(User {
+            id,
+            email: email.to_string(),
+            first_name: first_name.to_string(),
+            last_name: last_name.to_string(),
+            password_hash: hash_password(password)?,
+        })
     }
 }
+
+#[derive(Debug, Deserialize, Serialize, FromRow)]
+pub struct ReturnUser {
+    pub id: i32,
+    pub email: String,
+    pub is_verified: bool,
+}
+
+// Handlers
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Credentials {
+    pub email: String,
+    pub first_name: String,
+    pub last_name: String,
+    pub password: String,
+}
+
+impl TryInto<User> for Credentials {
+    type Error = Error;
+
+    fn try_into(self) -> Result<User> {
+        Ok(User::new(
+            None,
+            &self.email,
+            &self.first_name,
+            &self.last_name,
+            &self.password,
+        )?)
+    }
+}
+
+// #[derive(sqlx::FromRow, Clone, Serialize, Deserialize, Debug)]
+// pub struct User {
+//     id: Option<i32>,
+//     email: String,
+//     password_hash: String,
+//     authenticator_mfa_enabled: bool,
+//     mfa_secret: String,
+//     is_verified: bool,
+//     created_at: DateTime<Utc>,
+//     updated_at: DateTime<Utc>,
+// }
+// impl User {
+//     pub async fn create(&self, tx: &mut Transaction<'_, Postgres>) -> Result<i32> {
+//         println!("hello");
+//         info!("Inserting new instrument: {:?}", self);
+//
+//         let result = sqlx::query(
+//             r#"
+//             INSERT INTO users (email, password_hash, is_verified)
+//             VALUES ($1, $2, $3)
+//             RETURNING id
+//             "#,
+//         )
+//         .bind(&self.email)
+//         .bind(&self.password_hash)
+//         .bind(&self.is_verified)
+//         .fetch_one(tx.deref_mut())
+//         .await?;
+//
+//         let id: i32 = result.try_get("id")?;
+//
+//         info!("Successfully created user with id: {}", id);
+//         Ok(id)
+//     }
+// }
 // #[async_trait]
 // pub trait UserQueries: Sized {
 //     // async fn register(&self, tx: &mut Transaction<'_, Postgres>) -> Result<i32>;

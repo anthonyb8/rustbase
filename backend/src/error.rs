@@ -4,7 +4,7 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use oauth2::basic::BasicErrorResponseType;
-use std::time::SystemTimeError;
+use std::{num::ParseIntError, time::SystemTimeError};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -49,8 +49,12 @@ pub enum Error {
     RedisError(#[from] redis::RedisError),
     #[error("Serde Json error: {0}")]
     SerdeJsonError(#[from] serde_json::Error),
+    #[error("Multipart error: {0}")]
+    MultipartError(#[from] axum::extract::multipart::MultipartError),
     #[error("Object error: {0}")]
     ObjectError(#[from] object_store::Error),
+    #[error("ParseInt: {0}")]
+    ParseIntError(#[from] ParseIntError),
     // #[error("Ngrok connect error: {0}")]
     // ConnectError(#[from] ngrok::session::ConnectError),
     // #[error("Ngrok rpc error: {0}")]
@@ -129,6 +133,9 @@ impl Into<ApiResponse<String>> for Error {
             Error::ParseError(ref msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg.to_string()),
             Error::RedisError(ref msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg.to_string()),
             Error::SerdeJsonError(ref msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg.to_string()),
+            Error::MultipartError(ref msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg.to_string()),
+
+            Error::ParseIntError(ref msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg.to_string()),
 
             // Error::ConnectError(ref msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg.to_string()),
 
@@ -140,7 +147,7 @@ impl Into<ApiResponse<String>> for Error {
         };
 
         ApiResponse {
-            status: "failed".to_string(),
+            // status: "failed".to_string(),
             message,
             code: status.as_u16(),
             data: "".to_string(),

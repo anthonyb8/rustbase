@@ -1,0 +1,21 @@
+meta {
+  name: update email
+  type: http
+  seq: 5
+}
+
+patch {
+  url: https://localhost/users/patch/email/5
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "email": "test123@gmail.com"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

@@ -23,7 +23,7 @@ services:
     environment:
       - DATABASE_URL=postgres://test_user:test_pass@postgres:5432/test_db?sslmode=disable
     volumes:
-      - ./db/migrations:/db/migrations
+      - ./database/migrations:/db/migrations
     networks:
       - db-net
     profiles:
@@ -51,6 +51,8 @@ services:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadminpassword
     command: server /data --console-address ":9001"
+    networks:
+      - backend-net
 
   nginx-proxy:
     image: nginx:stable-alpine

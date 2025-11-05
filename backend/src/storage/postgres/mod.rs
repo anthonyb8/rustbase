@@ -1,9 +1,12 @@
 use crate::config::CONFIG;
+use crate::data::Objects;
 use crate::error::{Error, Result};
+use object_store::path::Path;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::postgres::{PgConnectOptions, PgPool};
 use sqlx::ConnectOptions;
 use sqlx::{Postgres, Transaction};
+use std::ops::DerefMut;
 use std::pin::Pin;
 use std::time::Duration;
 
@@ -21,7 +24,6 @@ impl PostgresClient {
         })
     }
 
-    // Alternative with explicit Pin boxing if the above doesn't work:
     pub async fn with_transaction<T, F>(&self, operation: F) -> Result<T>
     where
         T: Send,
@@ -42,7 +44,6 @@ impl PostgresClient {
         }
     }
 
-    /// Runs a closure inside a transaction. Automatically commits on success or rolls back on error.
     pub async fn with_pool<T, F>(&self, operation: F) -> Result<T>
     where
         T: Send,
@@ -60,6 +61,84 @@ impl PostgresClient {
             .begin()
             .await
             .map_err(|_| Error::CustomError("Failed to connect to database.".into()))
+    }
+
+    // Object metadate
+    pub async fn upload_object(&self, object: &Objects) -> Result<()> {
+        let mut tx = self.start_transaction().await?;
+        let query = r#"
+            INSERT INTO objects (user_id, key, filename)
+            VALUES ($1, $2, $3)
+            ON CONFLICT (user_id, filename) DO UPDATE 
+            SET key = EXCLUDED.key
+        "#;
+
+        match sqlx::query(query)
+            .bind(&object.user_id)
+            .bind(&object.key)
+            .bind(&object.filename)
+            .execute(tx.deref_mut())
+            .await
+        {
+            Ok(_) => {
+                tx.commit().await?;
+                Ok(())
+            }
+            Err(e) => {
+                tx.rollback().await?;
+                Err(e.into())
+            }
+        }
+    }
+
+    pub async fn get_object(&self, path: &Path) -> Result<Objects> {
+        let object: Objects = sqlx::query_as(
+            r#"
+            SELECT *
+            FROM objects 
+            WHERE key=$1
+            LIMIT 1
+        "#,
+        )
+        .bind(path.to_string())
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(object)
+    }
+
+    pub async fn delete_object(&self, key: &str) -> Result<()> {
+        let mut tx = self.start_transaction().await?;
+        let query = r#"
+            DELETE FROM objects 
+            WHERE key=$1 
+        "#;
+
+        match sqlx::query(query).bind(key).execute(tx.deref_mut()).await {
+            Ok(_) => {
+                tx.commit().await?;
+                Ok(())
+            }
+            Err(e) => {
+                tx.rollback().await?;
+                Err(e.into())
+            }
+        }
+    }
+
+    pub async fn list_user_objects(&self, user_id: i32) -> Result<Vec<Objects>> {
+        let objects: Vec<Objects> = sqlx::query_as(
+            r#"
+            SELECT * 
+            FROM objects 
+            WHERE user_id = $1
+        "#,
+        )
+        .bind(&user_id)
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(objects)
     }
 }
 
