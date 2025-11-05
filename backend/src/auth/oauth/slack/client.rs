@@ -14,7 +14,8 @@ pub struct SlackOauth {
 
 impl SlackOauth {
     pub fn new() -> Result<Self> {
-        let redirect_uri = RedirectUrl::new(format!("{}/slack/oauth/callback", CONFIG.app_url))?;
+        let redirect_uri =
+            RedirectUrl::new(format!("{}/auth/oauth/slack/callback", CONFIG.app_url))?;
         let http_client = reqwest::Client::builder()
             .redirect(reqwest::redirect::Policy::none())
             .build()

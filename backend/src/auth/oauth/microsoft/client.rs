@@ -17,7 +17,8 @@ impl MicrosoftOauth {
             .redirect(reqwest::redirect::Policy::none())
             .build()
             .unwrap();
-        let redirect_uri = RedirectUrl::new(format!("{}/microsoft/oauth", CONFIG.app_url))?;
+        let redirect_uri =
+            RedirectUrl::new(format!("{}/auth/oauth/microsoft/callback", CONFIG.app_url))?;
 
         Ok(Self {
             http_client,

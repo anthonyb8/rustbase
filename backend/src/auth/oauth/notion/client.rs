@@ -17,7 +17,8 @@ impl NotionOauth {
             .redirect(reqwest::redirect::Policy::none())
             .build()
             .unwrap();
-        let redirect_uri = RedirectUrl::new(format!("{}/notion/oauth/callback", CONFIG.app_url))?;
+        let redirect_uri =
+            RedirectUrl::new(format!("{}/auth/oauth/notion/callback", CONFIG.app_url))?;
 
         Ok(Self {
             http_client,

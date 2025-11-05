@@ -18,7 +18,8 @@ impl GoogleOauth {
             .redirect(reqwest::redirect::Policy::none())
             .build()
             .unwrap();
-        let redirect_uri = RedirectUrl::new(format!("{}/google/oauth/callback", CONFIG.app_url))?;
+        let redirect_uri =
+            RedirectUrl::new(format!("{}/auth/oauth/google/callback", CONFIG.app_url))?;
         let revocation_url =
             RevocationUrl::new("https://oauth2.googleapis.com/revoke".to_string())?;
 

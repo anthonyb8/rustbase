@@ -6,6 +6,6 @@ use std::sync::Arc;
 
 pub fn router() -> Router<Arc<AppState>> {
     Router::new()
-        .route("/oauth/authenticate/{id}", get(get_authentication_url))
-        .route("/oauth/callback", get(slack_callback))
+        .route("/authenticate/{id}", get(get_authentication_url))
+        .route("/callback", get(slack_callback))
 }
