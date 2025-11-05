@@ -6,8 +6,9 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) NOT NULL UNIQUE,
     first_name VARCHAR(50), 
     last_name VARCHAR(50),
+    is_verified BOOL NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
-    upadted_at TIMESTAMP DEFAULT NOW()
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS auth_providers (
@@ -17,7 +18,6 @@ CREATE TABLE IF NOT EXISTS auth_providers (
     password_hash VARCHAR(255),
     access_token TEXT,
     refresh_token TEXT,
-    is_verified BOOL NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW() 
 );

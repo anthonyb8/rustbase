@@ -1,0 +1,22 @@
+meta {
+  name: verification-email
+  type: http
+  seq: 1
+}
+
+post {
+  url: https://localhost/email/verification-email
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "email": "anthonybaxter819@gmail.com"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

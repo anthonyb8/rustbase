@@ -1,0 +1,25 @@
+meta {
+  name: register
+  type: http
+  seq: 2
+}
+
+post {
+  url: https://localhost/auth/register
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "email": "anthonybaxter819@gmail.com",
+    "first_name": "john",
+    "last_name" :"doe",
+    "password": "password"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -4,6 +4,7 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use oauth2::basic::BasicErrorResponseType;
+use sqlx::types::Uuid;
 use std::{num::ParseIntError, time::SystemTimeError};
 use thiserror::Error;
 
@@ -53,6 +54,8 @@ pub enum Error {
     MultipartError(#[from] axum::extract::multipart::MultipartError),
     #[error("Object error: {0}")]
     ObjectError(#[from] object_store::Error),
+    #[error("Uuid error: {0}")]
+    UuidError(#[from] sqlx::types::uuid::Error),
     #[error("ParseInt: {0}")]
     ParseIntError(#[from] ParseIntError),
     // #[error("Ngrok connect error: {0}")]
@@ -124,7 +127,6 @@ impl Into<ApiResponse<String>> for Error {
             Error::TotpUrlError(ref msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg.to_string()),
             Error::SystemtimeError(ref msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg.to_string()),
             Error::ObjectError(ref msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg.to_string()),
-
             Error::EncryptionError(ref msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg.to_string()),
             Error::Utf8Error(ref msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg.to_string()),
             Error::DecodeError(ref msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg.to_string()),
@@ -134,12 +136,8 @@ impl Into<ApiResponse<String>> for Error {
             Error::RedisError(ref msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg.to_string()),
             Error::SerdeJsonError(ref msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg.to_string()),
             Error::MultipartError(ref msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg.to_string()),
-
             Error::ParseIntError(ref msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg.to_string()),
-
-            // Error::ConnectError(ref msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg.to_string()),
-
-            // Error::RpcError(ref msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg.to_string()),
+            Error::UuidError(ref msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg.to_string()),
             Error::RequestError(ref msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg.to_string()),
             Error::TokenRequestError(ref msg) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, msg.to_string())

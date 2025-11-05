@@ -1,0 +1,23 @@
+meta {
+  name: login
+  type: http
+  seq: 3
+}
+
+post {
+  url: https://localhost/auth/login
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "email": "anthonybaxter819@gmail.com",
+    "password": "newpassword"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

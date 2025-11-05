@@ -4,6 +4,7 @@ use crate::{
 };
 use redis::{aio::MultiplexedConnection, AsyncCommands};
 use serde_json;
+use sqlx::types::Uuid;
 
 #[derive(Debug)]
 pub struct RedisClient {
@@ -20,6 +21,38 @@ impl RedisClient {
 
     pub async fn connection(&self) -> MultiplexedConnection {
         self.conn.clone()
+    }
+
+    pub async fn store_mfa_code(&self, code: &str, user_id: Uuid, ttl: u64) -> Result<()> {
+        let key = format!("mfa:{}", user_id);
+        let _: () = self.conn.clone().set_ex(key, code, ttl).await?;
+        Ok(())
+    }
+
+    pub async fn get_mfa_code(&self, user_id: Uuid) -> Result<Option<String>> {
+        let key = format!("mfa:{}", user_id);
+        let code: Option<String> = self.conn.clone().get(key).await.ok();
+        Ok(code)
+    }
+
+    pub async fn store_token(
+        &self,
+        token: &str,
+        type_token: &str,
+        user_id: Uuid,
+        ttl: u64,
+    ) -> Result<()> {
+        let key = format!("{}:{}", type_token, token);
+        let value = user_id.to_string();
+        let _: () = self.conn.clone().set_ex(key, value, ttl).await?;
+        Ok(())
+    }
+
+    pub async fn get_token(&self, token: &str, type_token: &str) -> Result<Uuid> {
+        let key = format!("{}:{}", type_token, token);
+        let user_id: String = self.conn.clone().get(key).await?;
+
+        Ok(Uuid::parse_str(&user_id)?)
     }
 
     pub async fn store_flow(&self, user_id: i32, platform: &str, flow: &Flow) -> Result<()> {

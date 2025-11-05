@@ -1,0 +1,26 @@
+meta {
+  name: mfa-code
+  type: http
+  seq: 3
+}
+
+post {
+  url: https://localhost/email/mfa-code
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI4ZGUzZTUxOS00YTg3LTRlOWItOWFjNC04YmRhZGUzMmU2MjgiLCJtZmFfdmVyaWZpZWQiOmZhbHNlLCJleHAiOjE3NjIzNzUxOTgsImlhdCI6MTc2MjM3NDg5OH0.qW8M77ACs9wRzzlfKNyci-sbeta4apFUyFdmWPeY0Q4
+}
+
+body:json {
+  {
+    "email": "anthonybaxter819@gmail.com"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

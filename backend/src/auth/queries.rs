@@ -1,49 +1,99 @@
-use super::models::{AuthUser, EmailMfaCodes, RefreshToken, User};
+use super::models::RefreshToken;
+use crate::auth::models::RegisterUser;
 use crate::crypt::hash::{hash_password, hash_token};
 use crate::{Error, Result};
 use chrono::{DateTime, Utc};
-use sqlx::{PgPool, Postgres, Row, Transaction};
+use sqlx::types::Uuid;
+use sqlx::{PgPool, Postgres, Transaction};
 use std::ops::DerefMut;
-use tracing::info;
 
-pub struct UserQueries;
+pub struct AuthQueries;
 
-impl UserQueries {
-    pub async fn register(user: &AuthUser, tx: &mut Transaction<'_, Postgres>) -> Result<i32> {
-        let result = sqlx::query(
+impl AuthQueries {
+    pub async fn register(user: &RegisterUser, tx: &mut Transaction<'_, Postgres>) -> Result<Uuid> {
+        let user_id: Uuid = sqlx::query_scalar(
             r#"
-        INSERT INTO users (email, password_hash, is_verified)
-        VALUES ($1, $2, false)
+        INSERT INTO users (email, first_name, last_name, is_verified)
+        VALUES ($1, $2, $3, false)
         RETURNING id
         "#,
         )
         .bind(&user.email)
-        .bind(hash_password(&user.password)?)
+        .bind(&user.first_name)
+        .bind(&user.last_name)
         .fetch_one(tx.deref_mut())
         .await?;
 
-        let id: i32 = result.try_get("id")?;
+        sqlx::query(
+            r#"
+            INSERT INTO auth_providers (user_id, provider, password_hash)
+            VALUES ($1,'local',$2)
+        "#,
+        )
+        .bind(user_id)
+        .bind(hash_password(&user.password)?)
+        .execute(tx.deref_mut())
+        .await?;
 
-        info!("Successfully created user with id: {}", id);
-        Ok(id)
+        Ok(user_id)
     }
 
-    pub async fn get_user_by_email(email: &str, pool: &PgPool) -> Result<User> {
-        let user: User = sqlx::query_as(
+    pub async fn get_password(email: &str, pool: &PgPool) -> Result<(Uuid, String)> {
+        let result: (Uuid, String) = sqlx::query_as::<_, (Uuid, String)>(
             r#"
-        SELECT id, email, password_hash, mfa_secret, is_verified 
-        FROM users 
-        WHERE email = $1
+            SELECT u.id, a.password_hash 
+            FROM auth_providers AS a
+            JOIN users AS u 
+                ON u.id = a.user_id 
+            WHERE u.email=$1
+            LIMIT 1
         "#,
         )
         .bind(email)
         .fetch_one(pool)
         .await?;
 
-        Ok(user)
+        Ok(result)
     }
 
-    pub async fn get_email(user_id: i32, pool: &PgPool) -> Result<String> {
+    pub async fn verify_user(user_id: Uuid, pool: &PgPool) -> Result<()> {
+        sqlx::query(
+            r#"
+            UPDATE users 
+            SET is_verified=true,
+                updated_at=NOW()
+            WHERE id=$1
+        "#,
+        )
+        .bind(user_id)
+        .execute(pool)
+        .await?;
+
+        Ok(())
+    }
+
+    pub async fn update_password(
+        user_id: Uuid,
+        password: &str,
+        tx: &mut Transaction<'_, Postgres>,
+    ) -> Result<()> {
+        sqlx::query(
+            r#"
+            UPDATE auth_providers 
+            SET password_hash=$1,
+                updated_at=NOW()
+            WHERE user_id=$2
+            "#,
+        )
+        .bind(hash_password(password)?)
+        .bind(user_id)
+        .execute(tx.deref_mut())
+        .await?;
+
+        Ok(())
+    }
+
+    pub async fn get_email(user_id: Uuid, pool: &PgPool) -> Result<String> {
         let email: String = sqlx::query_scalar(
             r#"
         SELECT email 
@@ -57,72 +107,13 @@ impl UserQueries {
 
         Ok(email)
     }
-
-    pub async fn get_user_id(email: &str, pool: &PgPool) -> Result<i32> {
-        let id: i32 = sqlx::query_scalar(
-            r#"
-        SELECT id 
-        FROM users 
-        WHERE email=$1
-        "#,
-        )
-        .bind(email)
-        .fetch_one(pool)
-        .await?;
-
-        Ok(id)
-    }
-}
-
-pub struct MfaQueries;
-
-impl MfaQueries {
-    pub async fn create_mfa_code(
-        user_id: i32,
-        code: String,
-        expires_at: DateTime<Utc>,
-        tx: &mut Transaction<'_, Postgres>,
-    ) -> Result<()> {
-        sqlx::query(
-            r#"
-            INSERT INTO email_mfa_codes (user_id, code_hash, expires_at)
-            VALUES ($1, $2, $3)
-            RETURNING id
-            "#,
-        )
-        .bind(user_id)
-        .bind(hash_token(&code))
-        .bind(expires_at)
-        .execute(tx.deref_mut())
-        .await?;
-
-        Ok(())
-    }
-
-    pub async fn get_mfa_code(user_id: i32, code: &str, pool: &PgPool) -> Result<EmailMfaCodes> {
-        let mfa_code: EmailMfaCodes = sqlx::query_as(
-            r#"
-            SELECT id, user_id, code_hash, expires_at, created_at
-            FROM email_mfa_codes
-            WHERE user_id = $1 
-            AND code_hash = $2 
-            "#,
-        )
-        .bind(user_id)
-        .bind(hash_token(code))
-        .fetch_optional(pool)
-        .await?
-        .ok_or_else(|| Error::CustomError("Invalid or expired MFA code".into()))?;
-
-        Ok(mfa_code)
-    }
 }
 
 pub struct TokenQueries;
 
 impl TokenQueries {
     pub async fn create_refresh_token(
-        user_id: i32,
+        user_id: Uuid,
         token: &str,
         expiry: DateTime<Utc>,
         pool: &PgPool,
@@ -178,8 +169,8 @@ impl TokenQueries {
         Ok(())
     }
 
-    pub async fn validate_refresh_token(token: &str, pool: &PgPool) -> Result<i32> {
-        let result = sqlx::query_scalar(
+    pub async fn validate_refresh_token(token: &str, pool: &PgPool) -> Result<Uuid> {
+        let result: Uuid = sqlx::query_scalar(
             r#"
             SELECT user_id
             FROM refresh_tokens 
@@ -192,28 +183,5 @@ impl TokenQueries {
         .await?;
 
         Ok(result)
-    }
-
-    pub async fn create_verification_token(
-        user_id: i32,
-        token: &str,
-        token_type: &str,
-        expiry: DateTime<Utc>,
-        tx: &mut Transaction<'_, Postgres>,
-    ) -> Result<()> {
-        sqlx::query(
-            r#"
-        INSERT INTO verification_tokens (user_id, token_hash, token_type, expires_at)
-        VALUES ($1, $2, $3, $4)
-        "#,
-        )
-        .bind(user_id)
-        .bind(hash_token(token))
-        .bind(token_type)
-        .bind(expiry)
-        .execute(tx.deref_mut())
-        .await?;
-
-        Ok(())
     }
 }

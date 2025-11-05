@@ -1,0 +1,26 @@
+meta {
+  name: verify-email
+  type: http
+  seq: 4
+}
+
+post {
+  url: https://localhost/auth/verify-email?token=nC7ilC0ExFZ9GBohibdCOMHalixvV37qMaI2Vr6EU6k
+  body: none
+  auth: inherit
+}
+
+params:query {
+  token: nC7ilC0ExFZ9GBohibdCOMHalixvV37qMaI2Vr6EU6k
+}
+
+body:json {
+  {
+    "email": "anthonybaxter819@gmail.com"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
