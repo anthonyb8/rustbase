@@ -1,16 +1,13 @@
 services:
   atlas:
     image: arigaio/atlas 
-    env_file:
-      - .env
-    working_dir: /migrations
     volumes:
       - ./database/migrations:/migrations
     networks:
       - db-net
     depends_on:
       - postgres
-    command: "migrate apply --dir file:///migrations"
+    command: "migrate apply --url postgres://test_user:test_pass@postgres:5432/test_db?sslmode=disable --dir file:///migrations --allow-dirty"
 #
 #   dbmate:
 #     image: amacneil/dbmate
