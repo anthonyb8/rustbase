@@ -5,6 +5,7 @@ use crate::response::ApiResponse;
 use crate::smtp::routes::router as email_router;
 use crate::state::AppState;
 use crate::users::routes::router as user_router;
+use crate::websocket::routes::router as ws_router;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::get;
@@ -20,6 +21,7 @@ pub fn router(state: AppState) -> Router {
         .nest("/email", email_router())
         .nest("/objects", objects_router())
         .nest("/integrations", integrations_router())
+        .nest("/ws", ws_router())
         .route("/health", get(health_check))
         .with_state(arc_state)
 }

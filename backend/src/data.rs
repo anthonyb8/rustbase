@@ -1,10 +1,47 @@
 use crate::{Error, Result};
+use axum::extract::ws::Message;
 use axum::{body::Bytes, extract::Multipart};
 use oauth2::{AuthorizationCode, CsrfToken, PkceCodeVerifier};
+use redis::{FromRedisValue, RedisResult};
 use serde::ser::{SerializeStruct, Serializer};
 use serde::{Deserialize, Serialize};
+use serde_json::{self, Value};
 use sqlx::{prelude::FromRow, types::Uuid};
 use url::Url;
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Event {
+    pub name: String,
+    pub data: Value,
+}
+
+impl FromRedisValue for Event {
+    fn from_redis_value(v: &redis::Value) -> RedisResult<Self> {
+        match v {
+            redis::Value::Array(items) if items.len() == 2 => {
+                // BLPOP returns ["key", "value"]
+                let name = String::from_redis_value(&items[0])?;
+                let data_bytes: Vec<u8> = FromRedisValue::from_redis_value(&items[1])?;
+                let data = serde_json::from_slice(&data_bytes).map_err(|e| {
+                    redis::RedisError::from((redis::ErrorKind::TypeError, "Error parsing data"))
+                })?;
+                Ok(Event { name, data })
+            }
+            _ => Err(redis::RedisError::from((
+                redis::ErrorKind::TypeError,
+                "Expected bulk array of length 2",
+            ))),
+        }
+    }
+}
+
+impl From<Event> for Message {
+    fn from(event: Event) -> Self {
+        // If serialization fails, fallback to empty JSON object
+        let txt = serde_json::to_string(&event).unwrap_or_else(|_| "{}".to_string());
+        Message::text(txt)
+    }
+}
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Token {

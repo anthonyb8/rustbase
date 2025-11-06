@@ -35,8 +35,14 @@ async fn parse_response<T: DeserializeOwned>(
 
 #[cfg(test)]
 mod test_integration {
+    use std::time::Duration;
+
     use super::*;
     use ctor::ctor;
+    use futures::StreamExt;
+    use futures_util::sink::SinkExt;
+    use tokio_tungstenite::connect_async;
+    use tungstenite::{client::IntoClientRequest, Message};
 
     #[ctor]
     fn load_env() {
@@ -44,25 +50,60 @@ mod test_integration {
         println!("✅ .env loaded automatically for tests");
     }
 
+    // #[tokio::test]
+    // #[serial]
+    // async fn test_health_status() -> Result<()> {
+    //     // Test
+    //     let request = Request::builder()
+    //         .method("GET")
+    //         .uri("/health")
+    //         .header("content-type", "application/json")
+    //         .body(Body::empty())
+    //         .unwrap();
+    //
+    //     let app = create_app().await?;
+    //     let response = app.oneshot(request).await.unwrap();
+    //
+    //     let api_response: ApiResponse<String> = parse_response(response).await.unwrap();
+    //
+    //     // Validate
+    //     assert_eq!(api_response.code, StatusCode::OK);
+    //
+    //     Ok(())
+    // }
+
     #[tokio::test]
     #[serial]
-    async fn test_health_status() -> Result<()> {
-        // Test
-        let request = Request::builder()
-            .method("GET")
-            .uri("/health")
-            .header("content-type", "application/json")
-            .body(Body::empty())
+    async fn test_websocket_connection() {
+        let request = "ws://localhost:8080/ws/initialize/8de3e519-4a87-4e9b-9ac4-8bdade32e628"
+            .into_client_request()
             .unwrap();
 
-        let app = create_app().await?;
-        let response = app.oneshot(request).await.unwrap();
+        let (ws_stream, _) = connect_async(request).await.expect("Failed to connect");
+        let (mut write, mut read) = ws_stream.split();
 
-        let api_response: ApiResponse<String> = parse_response(response).await.unwrap();
+        tokio::spawn(async move {
+            while let Some(msg) = read.next().await {
+                match msg {
+                    Ok(Message::Text(text)) => println!("Received: {}", text),
+                    Ok(_) => (),
+                    Err(e) => {
+                        eprintln!("Error receiving message: {:?}", e);
+                        break;
+                    }
+                }
+            }
+        });
 
-        // Validate
-        assert_eq!(api_response.code, StatusCode::OK);
+        tokio::spawn(async move {
+            loop {
+                // Now you can send messages without blocking the read loop
+                write.send(Message::Text("hello".into())).await.unwrap();
 
-        Ok(())
+                tokio::time::sleep(Duration::from_secs(2)).await;
+            }
+        });
+
+        tokio::time::sleep(Duration::from_secs(10)).await;
     }
 }

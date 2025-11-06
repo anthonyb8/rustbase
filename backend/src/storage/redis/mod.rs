@@ -1,5 +1,5 @@
 use crate::{
-    data::{Flow, Token},
+    data::{Event, Flow, Token},
     error::Result,
 };
 use redis::{aio::MultiplexedConnection, AsyncCommands};
@@ -21,6 +21,12 @@ impl RedisClient {
 
     pub async fn connection(&self) -> MultiplexedConnection {
         self.conn.clone()
+    }
+
+    pub async fn append_event_queue(&self, key: &str, event: &Event) -> Result<()> {
+        let value = serde_json::to_vec(event).unwrap();
+        let _: () = self.conn.clone().rpush(key, value).await?;
+        Ok(())
     }
 
     pub async fn store_mfa_code(&self, code: &str, user_id: Uuid, ttl: u64) -> Result<()> {

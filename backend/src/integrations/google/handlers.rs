@@ -1,13 +1,14 @@
 use super::data::MessageQuery;
 use crate::crypt::jwt::Claims;
-use crate::data::Token;
+use crate::data::{Event, Token};
 use crate::error::Result;
 use crate::response::ApiResponse;
 use crate::state::AppState;
-use axum::extract::{Query, State};
+use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::{self, Extension};
+use serde_json::json;
 use std::sync::Arc;
 
 // Gmail
@@ -58,4 +59,27 @@ pub async fn gmail_message(
         "Password updated successfully",
         message,
     ))
+}
+
+pub async fn gmail_subscription(
+    State(state): State<Arc<AppState>>,
+    Extension(claims): Extension<Claims>,
+) -> Result<impl IntoResponse> {
+    Ok(())
+}
+
+pub async fn gmail_callback(State(state): State<Arc<AppState>>, Path(id): Path<String>) {
+    let key = format!("ws:{}", id);
+
+    let event = Event {
+        name: "event".to_string(),
+        data: json!({"key": "value"}),
+    };
+
+    state
+        .storage
+        .redis
+        .append_event_queue(&key, &event)
+        .await
+        .expect("errror");
 }
