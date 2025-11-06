@@ -1,6 +1,3 @@
--- migrate:up
--- CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -64,8 +61,3 @@ CREATE TABLE IF NOT EXISTS refresh_tokens(
 -- );
 
 
--- migrate:down
-DROP TABLE users;
-DROP TABLE objects;
--- DROP TABLE recovery_codes;
--- DROP TABLE refresh_tokens;
