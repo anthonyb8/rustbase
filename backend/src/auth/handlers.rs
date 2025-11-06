@@ -30,9 +30,8 @@ pub async fn register(
         Ok(id) => {
             tx.commit().await?;
             Ok(ApiResponse::new(
-                "",
-                &format!("Successfully created user with id {}", id),
                 StatusCode::CREATED,
+                &format!("Successfully created user with id {}", id),
                 "".to_string(),
             ))
         }
@@ -58,9 +57,8 @@ pub async fn login(
     let jwt = encode_jwt(id.to_string(), false)?;
 
     Ok(ApiResponse::new(
-        "success",
-        &format!("User successfully logged in"),
         StatusCode::OK,
+        &format!("User successfully logged in"),
         json!({"token" :jwt, "token_type": "Bearer"}),
     ))
 }
@@ -82,9 +80,8 @@ pub async fn verify_email(
     AuthQueries::verify_user(user_id, &state.storage.postgres.pool).await?;
 
     Ok(ApiResponse::new(
-        "success",
-        &format!("Login."),
         StatusCode::CREATED,
+        &format!("Login."),
         "",
     ))
 }
@@ -110,9 +107,8 @@ pub async fn reset_password(
         Ok(_) => {
             tx.commit().await?;
             Ok(ApiResponse::new(
-                "",
-                "Successfully updated password.",
                 StatusCode::OK,
+                "Successfully updated password.",
                 "".to_string(),
             ))
         }
@@ -171,9 +167,8 @@ pub async fn verify_mfa(
     Ok((
         jar,
         ApiResponse::new(
-            "success",
-            "User successfully verified.",
             StatusCode::OK,
+            "User successfully verified.",
             json!({"token" :jwt, "token_type": "Bearer"}),
         ),
     ))
@@ -197,9 +192,8 @@ pub async fn refresh(
             Ok((
                 jar,
                 ApiResponse::new(
-                    "success",
-                    "User successfully verified.",
                     StatusCode::OK,
+                    "User successfully verified.",
                     json!({"token" :jwt, "token_type": "Bearer"}),
                 ),
             ))
@@ -224,11 +218,6 @@ pub async fn logout(
 
     Ok((
         jar,
-        ApiResponse::new(
-            "success",
-            &format!("Logout successuful."),
-            StatusCode::OK,
-            "",
-        ),
+        ApiResponse::new(StatusCode::OK, &format!("Logout successuful."), ""),
     ))
 }

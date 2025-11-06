@@ -27,9 +27,8 @@ pub async fn upload_file(
 
     match state.storage.upload_file(&object, &path, &file).await {
         Ok(_) => Ok(ApiResponse::new(
-            "",
-            "Successfully created file",
             StatusCode::CREATED,
+            "Successfully created file",
             "".to_string(),
         )),
         Err(e) => Err(e.into()),
@@ -75,7 +74,7 @@ pub async fn delete_files(
     let path = object_store::path::Path::from(key.as_str());
 
     match state.storage.delete_file(&path).await {
-        Ok(_) => Ok(ApiResponse::new("", "", StatusCode::NO_CONTENT, "")),
+        Ok(_) => Ok(ApiResponse::new(StatusCode::NO_CONTENT, "", "")),
         Err(e) => Err(e.into()),
     }
 }
@@ -88,9 +87,8 @@ pub async fn list_files(
 
     match state.storage.list_files(user_id).await {
         Ok(objs) => Ok(ApiResponse::new(
-            "",
-            &format!("Successfully retrieved list."),
             StatusCode::OK,
+            &format!("Successfully retrieved list."),
             objs,
         )),
         Err(e) => Err(e.into()),

@@ -7,18 +7,16 @@ use serde_json::json;
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct ApiResponse<T> {
-    // pub status: String,
-    pub message: String,
     pub code: u16,
+    pub message: String,
     pub data: T,
 }
 
 impl<T: Serialize> ApiResponse<T> {
-    pub fn new(status: &str, message: &str, code: StatusCode, data: T) -> Self {
+    pub fn new(code: StatusCode, message: &str, data: T) -> Self {
         Self {
-            // status: status.to_string(),
-            message: message.to_string(),
             code: code.as_u16(),
+            message: message.to_string(),
             data,
         }
     }
@@ -31,7 +29,6 @@ impl<T: Serialize> IntoResponse for ApiResponse<T> {
             "message": self.message,
             "data": self.data,
             "code": self.code,
-            // "status": self.status,
         }));
         (status, body).into_response()
     }

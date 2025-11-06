@@ -30,9 +30,8 @@ pub async fn gmail_messages(
         .await?;
 
     Ok(ApiResponse::new(
-        "",
-        "Password updated successfully",
         StatusCode::OK,
+        "Password updated successfully",
         messages,
     ))
 }
@@ -55,9 +54,8 @@ pub async fn gmail_message(
         .await?;
 
     Ok(ApiResponse::new(
-        "",
-        "Password updated successfully",
         StatusCode::OK,
+        "Password updated successfully",
         message,
     ))
 }

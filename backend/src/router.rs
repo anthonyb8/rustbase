@@ -25,5 +25,5 @@ pub fn router(state: AppState) -> Router {
 }
 
 async fn health_check() -> impl IntoResponse {
-    ApiResponse::new("success", "Status healthy.", StatusCode::OK, "")
+    ApiResponse::new(StatusCode::OK, "Status healthy.", "")
 }

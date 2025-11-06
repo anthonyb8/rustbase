@@ -42,9 +42,8 @@ pub async fn notion_callback(
     let parts: Vec<&str> = params.state.split(':').collect();
     if parts.len() != 2 {
         return Ok(ApiResponse::new(
-            "failure",
-            &format!("Invalid state format."),
             StatusCode::BAD_REQUEST,
+            &format!("Invalid state format."),
             "",
         ));
     }
@@ -53,9 +52,8 @@ pub async fn notion_callback(
     let stored_verifier: Flow = state.storage.redis.get_flow(id, "notion").await?;
     if csrf_token != stored_verifier.csrf_state.secret() {
         return Ok(ApiResponse::new(
-            "failure",
-            &format!("Invalid state."),
             StatusCode::BAD_REQUEST,
+            &format!("Invalid state."),
             "",
         ));
     }
@@ -77,9 +75,8 @@ pub async fn notion_callback(
     state.storage.redis.delete_flow(id, "notion").await?;
 
     Ok(ApiResponse::new(
-        "success",
-        &format!("Verification confirmed."),
         StatusCode::CREATED,
+        &format!("Verification confirmed."),
         "",
     ))
 }

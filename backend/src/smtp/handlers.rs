@@ -53,9 +53,8 @@ pub async fn verification_email(
     state.smtp.send_email(email)?;
 
     Ok(ApiResponse::new(
-        "success",
-        &format!("Verification email sent."),
         StatusCode::OK,
+        &format!("Verification email sent."),
         "",
     ))
 }
@@ -90,9 +89,8 @@ pub async fn reset_password_email(
     state.smtp.send_email(email)?;
 
     Ok(ApiResponse::new(
-        "success",
-        &format!("Reset password sent.."),
         StatusCode::OK,
+        &format!("Reset password sent.."),
         "",
     ))
 }
@@ -127,9 +125,8 @@ pub async fn mfa_email(
     state.smtp.send_email(email)?;
 
     Ok(ApiResponse::new(
-        "success",
-        &format!("MFA Code sent."),
         StatusCode::OK,
+        &format!("MFA Code sent."),
         "",
     ))
 }
