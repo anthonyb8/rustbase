@@ -4,71 +4,35 @@ use crate::crypt::jwt::Claims;
 use crate::error::Result;
 use crate::response::ApiResponse;
 use crate::state::AppState;
-use crate::users::models::Credentials;
 use crate::users::models::UpdateEmailPayload;
 use crate::users::models::UpdatePasswordPayload;
-use crate::users::models::User;
-use axum::extract::{Path, State};
+use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::{Extension, Json};
+use axum::Extension;
+use axum::Json;
+use sqlx::types::Uuid;
 use std::sync::Arc;
 
-pub async fn create_user(
+pub async fn get_user(
     State(state): State<Arc<AppState>>,
-    Json(credentials): Json<Credentials>,
+    Extension(claims): Extension<Claims>,
 ) -> Result<impl IntoResponse> {
-    let user: User = credentials.try_into()?;
-    let mut tx = state.storage.postgres.start_transaction().await?;
+    let user_id = Uuid::parse_str(&claims.sub)?;
+    let pool = &state.storage.postgres.pool;
 
-    match UserQueries::create(&mut tx, &user).await {
-        Ok(id) => {
-            tx.commit().await?;
-            Ok(ApiResponse::new(
-                "",
-                &format!("Successfully created user with id {}", id),
-                StatusCode::CREATED,
-                "".to_string(),
-            ))
-        }
-        Err(e) => {
-            println!("{:?}", e);
-            tx.rollback().await?;
-            Err(e.into())
-        }
-    }
-}
-
-pub async fn verify_user_email(
-    State(state): State<Arc<AppState>>,
-    Path(user_id): Path<i32>,
-) -> Result<impl IntoResponse> {
-    let mut tx = state.storage.postgres.start_transaction().await?;
-
-    match UserQueries::verify_user(&mut tx, user_id).await {
-        Ok(()) => {
-            tx.commit().await?;
-
-            Ok(ApiResponse::new(
-                "",
-                "Email verified successfully",
-                StatusCode::OK,
-                "".to_string(),
-            ))
-        }
-        Err(e) => {
-            println!("{:?}", e);
-            tx.rollback().await?;
-            Err(e.into())
-        }
+    match UserQueries::get_user(user_id, pool).await {
+        Ok(user) => Ok(ApiResponse::new(StatusCode::OK, "success", user)),
+        Err(e) => Err(e.into()),
     }
 }
 
 pub async fn update_user_email(
     State(state): State<Arc<AppState>>,
-    Path(user_id): Path<i32>,
+    Extension(claims): Extension<Claims>,
     Json(payload): Json<UpdateEmailPayload>,
 ) -> Result<impl IntoResponse> {
+    let user_id = Uuid::parse_str(&claims.sub)?;
     let mut tx = state.storage.postgres.start_transaction().await?;
 
     match UserQueries::update_email(&mut tx, user_id, &payload.email).await {
@@ -76,14 +40,12 @@ pub async fn update_user_email(
             tx.commit().await?;
 
             Ok(ApiResponse::new(
-                "",
-                "Email updated successfully",
                 StatusCode::OK,
+                "Email updated successfully",
                 "".to_string(),
             ))
         }
         Err(e) => {
-            println!("{:?}", e);
             tx.rollback().await?;
             Err(e.into())
         }
@@ -92,9 +54,11 @@ pub async fn update_user_email(
 
 pub async fn update_user_password(
     State(state): State<Arc<AppState>>,
-    Path(user_id): Path<i32>,
+    Extension(claims): Extension<Claims>,
     Json(payload): Json<UpdatePasswordPayload>,
 ) -> Result<impl IntoResponse> {
+    let user_id = Uuid::parse_str(&claims.sub)?;
+
     let mut tx = state.storage.postgres.start_transaction().await?;
     let hash = &hash_password(&payload.password)?;
 
@@ -103,14 +67,12 @@ pub async fn update_user_password(
             tx.commit().await?;
 
             Ok(ApiResponse::new(
-                "",
-                "Password updated successfully",
                 StatusCode::OK,
+                "Password updated successfully",
                 "".to_string(),
             ))
         }
         Err(e) => {
-            println!("{:?}", e);
             tx.rollback().await?;
             Err(e.into())
         }
@@ -119,38 +81,25 @@ pub async fn update_user_password(
 
 pub async fn delete_user(
     State(state): State<Arc<AppState>>,
-    Path(id): Path<i32>,
+    Extension(claims): Extension<Claims>,
 ) -> Result<impl IntoResponse> {
+    let user_id = Uuid::parse_str(&claims.sub)?;
+
     let mut tx = state.storage.postgres.start_transaction().await?;
 
-    match UserQueries::delete(&mut tx, id).await {
+    match UserQueries::delete(&mut tx, user_id).await {
         Ok(()) => {
             tx.commit().await?;
 
             Ok(ApiResponse::new(
-                "success",
-                &format!("Deleted user id {} successfully.", id),
                 StatusCode::NO_CONTENT,
+                &format!("Deleted user id {} successfully.", user_id),
                 "".to_string(),
             ))
         }
         Err(e) => {
-            println!("{:?}", e);
             tx.rollback().await?;
             Err(e.into())
         }
-    }
-}
-
-pub async fn get_user(
-    State(state): State<Arc<AppState>>,
-    // Extension(claims): Extension<Claims>,
-    Path(id): Path<i32>,
-) -> Result<impl IntoResponse> {
-    let pool = &state.storage.postgres.pool;
-
-    match UserQueries::get(pool, id).await {
-        Ok(user) => Ok(ApiResponse::new("success", "", StatusCode::OK, user)),
-        Err(e) => Err(e.into()),
     }
 }

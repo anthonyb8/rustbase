@@ -186,6 +186,6 @@ mod tests {
 
     #[test]
     fn test_get_env() {
-        let x = get_env::<String>("APP_PORT", Some("false")).unwrap();
+        let _ = get_env::<String>("APP_PORT", Some("false")).unwrap();
     }
 }

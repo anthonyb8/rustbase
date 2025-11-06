@@ -1,15 +1,20 @@
 meta {
   name: delete-user
   type: http
-  seq: 2
+  seq: 4
 }
 
 delete {
-  url: https://localhost/users/delete/5
+  url: https://localhost/users
   body: none
-  auth: inherit
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI4ZGUzZTUxOS00YTg3LTRlOWItOWFjNC04YmRhZGUzMmU2MjgiLCJtZmFfdmVyaWZpZWQiOnRydWUsImV4cCI6MTc2MjM5Njk3MSwiaWF0IjoxNzYyMzk1MTcxfQ.40pGM37qTkc22T56wvITkGxtaEbTR-3YOC2AI1S0dpM
 }
 
 settings {
   encodeUrl: true
+  timeout: 0
 }

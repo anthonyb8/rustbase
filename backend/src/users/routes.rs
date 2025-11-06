@@ -7,11 +7,10 @@ use std::sync::Arc;
 
 pub fn router() -> Router<Arc<AppState>> {
     Router::new()
-        // .nest("/authenticate", auth_router())
-        .route("/{id}", get(get_user))
-        .route("/{id}", delete(delete_user))
-        .route("/{id}", put(delete_user))
-        .route("/{id}/email", put(update_user_email))
-        .route("/{id}/password", put(update_user_password))
+        .route("/", get(get_user))
+        .route("/", delete(delete_user))
+        .route("/email", put(update_user_email))
+        .route("/password", put(update_user_password))
+        // .route("/", put(delete_user))
         .route_layer(middleware::from_fn(auth_middleware))
 }

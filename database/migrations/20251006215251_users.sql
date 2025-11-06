@@ -37,7 +37,7 @@ CREATE UNIQUE INDEX idx_linked_accounts ON linked_accounts(user_id, provider);
 
 CREATE TABLE IF NOT EXISTS objects (
     id SERIAL PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES users(id),
+    user_id UUID NOT NULL REFERENCES users(id) on DELETE CASCADE,
     key VARCHAR(255) NOT NULL,  -- S3 key
     filename VARCHAR(255) NOT NULL  -- Original filename
     -- content_type VARCHAR(100),

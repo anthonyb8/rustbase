@@ -1,13 +1,17 @@
 meta {
   name: update email
   type: http
-  seq: 5
+  seq: 2
 }
 
-patch {
-  url: https://localhost/users/patch/email/5
+put {
+  url: https://localhost/users/email
   body: json
-  auth: inherit
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI4ZGUzZTUxOS00YTg3LTRlOWItOWFjNC04YmRhZGUzMmU2MjgiLCJtZmFfdmVyaWZpZWQiOnRydWUsImV4cCI6MTc2MjM5Njk3MSwiaWF0IjoxNzYyMzk1MTcxfQ.40pGM37qTkc22T56wvITkGxtaEbTR-3YOC2AI1S0dpM
 }
 
 body:json {
@@ -18,4 +22,5 @@ body:json {
 
 settings {
   encodeUrl: true
+  timeout: 0
 }
