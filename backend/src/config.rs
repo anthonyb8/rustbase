@@ -9,8 +9,6 @@ where
     T: FromStr,
     T::Err: Display,
 {
-    println!("{}", name);
-
     // Parse value to typ if exists
     let value = match env::var(name) {
         Ok(s) => s,
@@ -24,7 +22,6 @@ where
             }
         },
     };
-    println!("{:?}", value);
 
     value
         .parse::<T>()
@@ -179,7 +176,6 @@ impl AppConfig {
             notion_auth_url: AuthUrl::new("https://api.notion.com/v1/oauth/authorize".to_string())?,
             notion_token_url: TokenUrl::new("https://api.notion.com/v1/oauth/token".to_string())?,
         };
-        println!("config loadde");
         Ok(config)
     }
 }
@@ -191,6 +187,5 @@ mod tests {
     #[test]
     fn test_get_env() {
         let x = get_env::<String>("APP_PORT", Some("false")).unwrap();
-        println!("{:?}", x);
     }
 }

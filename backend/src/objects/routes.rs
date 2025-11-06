@@ -6,15 +6,10 @@ use axum::{middleware, Router};
 use std::sync::Arc;
 
 pub fn router() -> Router<Arc<AppState>> {
-    let public_routes = Router::new()
-        .route("/upload/file/{id}", post(upload_file))
-        .route("/upload/file/{id}", get(get_file))
-        .route("/list/file/{id}", get(list_files))
-        .route("/delete/file/{id}", delete(delete_files));
-
-    let protected_routes = Router::new()
-        .route("/other/{id}", post(upload_file))
-        .route_layer(middleware::from_fn(auth_middleware));
-
-    Router::new().merge(public_routes).merge(protected_routes)
+    Router::new()
+        .route("/", post(upload_file))
+        .route("/", get(get_file))
+        .route("/", delete(delete_files))
+        .route("/list", get(list_files))
+        .route_layer(middleware::from_fn(auth_middleware))
 }

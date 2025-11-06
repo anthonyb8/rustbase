@@ -38,8 +38,6 @@ pub async fn notion_callback(
     State(state): State<Arc<AppState>>,
     Query(params): Query<AuthRequest>,
 ) -> Result<impl IntoResponse> {
-    println!("{:?}", params);
-
     // Split `id:csrf_token`
     let parts: Vec<&str> = params.state.split(':').collect();
     if parts.len() != 2 {

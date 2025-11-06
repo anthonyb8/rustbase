@@ -4,6 +4,7 @@ use crate::error::{Error, Result};
 use object_store::path::Path;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::postgres::{PgConnectOptions, PgPool};
+use sqlx::types::Uuid;
 use sqlx::ConnectOptions;
 use sqlx::{Postgres, Transaction};
 use std::ops::DerefMut;
@@ -126,7 +127,7 @@ impl PostgresClient {
         }
     }
 
-    pub async fn list_user_objects(&self, user_id: i32) -> Result<Vec<Objects>> {
+    pub async fn list_user_objects(&self, user_id: Uuid) -> Result<Vec<Objects>> {
         let objects: Vec<Objects> = sqlx::query_as(
             r#"
             SELECT * 

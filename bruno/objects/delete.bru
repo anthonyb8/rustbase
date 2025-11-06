@@ -1,0 +1,24 @@
+meta {
+  name: delete
+  type: http
+  seq: 3
+}
+
+delete {
+  url: https://localhost/objects?name=sample.pdf
+  body: multipartForm
+  auth: bearer
+}
+
+params:query {
+  name: sample.pdf
+}
+
+auth:bearer {
+  token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI4ZGUzZTUxOS00YTg3LTRlOWItOWFjNC04YmRhZGUzMmU2MjgiLCJtZmFfdmVyaWZpZWQiOnRydWUsImV4cCI6MTc2MjM5NTQwOSwiaWF0IjoxNzYyMzkzNjA5fQ.8F7W3vBISWtCTdB3i5LAWINr8L-9We5XLKRoHh0KIyo
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

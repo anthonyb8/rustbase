@@ -72,7 +72,7 @@ impl<'de> Deserialize<'de> for EmailMessage {
         let from = get_header(headers, "From");
         let delivered_to = get_header(headers, "Delivered-To");
         let body = get_body(&json).unwrap_or("".into()).to_string();
-        println!("{:?}", id);
+
         Ok(EmailMessage {
             id,
             from,

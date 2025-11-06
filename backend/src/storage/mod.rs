@@ -4,9 +4,9 @@ pub mod redis;
 
 use axum::body::Bytes;
 use object_store::path::Path;
+use sqlx::types::Uuid;
 
 use crate::{
-    config::CONFIG,
     data::Objects,
     storage::{object::ObjectClient, postgres::PostgresClient, redis::RedisClient},
     Result,
@@ -21,8 +21,6 @@ pub struct StorageClient {
 
 impl StorageClient {
     pub async fn new() -> Result<Self> {
-        let config = &*CONFIG;
-
         Ok(StorageClient {
             postgres: PostgresClient::new().await?,
             redis: RedisClient::new().await?,
@@ -60,7 +58,7 @@ impl StorageClient {
         }
     }
 
-    pub async fn list_files(&self, user_id: i32) -> Result<Vec<Objects>> {
+    pub async fn list_files(&self, user_id: Uuid) -> Result<Vec<Objects>> {
         self.postgres.list_user_objects(user_id).await
     }
 }

@@ -13,11 +13,9 @@ async fn main() -> Result<()> {
 
     // Initialize the Axum routing service
     let state = AppState::new().await?;
-    println!("made statea");
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
     let listener = TcpListener::bind(addr).await?;
-    // let listener = TcpListener::bind(&CONFIG.app_url).await?;
     tracing::info!("Listening on {}", &CONFIG.app_url);
 
     // Run the server

@@ -11,7 +11,6 @@ static LOGGER_GUARD: Lazy<Option<WorkerGuard>> = Lazy::new(|| None);
 
 pub fn init_global_logger() -> Result<()> {
     let config = &*CONFIG;
-    print!("{:?}", &config.log_file);
 
     let (non_blocking, guard) =
         tracing_appender::non_blocking(std::fs::File::create(&config.log_file)?);

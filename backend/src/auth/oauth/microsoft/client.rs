@@ -55,8 +55,6 @@ impl MicrosoftOauth {
             .set_pkce_challenge(pkce_challenge)
             .url();
 
-        println!("Open this URL in your browser:\n{authorize_url}\n");
-
         AuthorizationFlow {
             authorize_url,
             csrf_state,

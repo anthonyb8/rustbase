@@ -15,9 +15,7 @@ use std::sync::Arc;
 use url::Url;
 
 pub fn get_object_store(url: &str) -> Result<Arc<dyn ObjectStore>> {
-    println!("{:?}", url);
     let parsed = Url::parse(url)?;
-    println!("shit");
 
     match parsed.scheme() {
         // Local filesystem: file:///path/to/data
@@ -43,8 +41,6 @@ pub fn get_object_store(url: &str) -> Result<Arc<dyn ObjectStore>> {
                 None
             };
 
-            println!("{:?}", endpoint);
-
             let mut builder = AmazonS3Builder::new()
                 .with_bucket_name(bucket)
                 .with_region("us-east-1"); // or get from env/config
@@ -59,7 +55,6 @@ pub fn get_object_store(url: &str) -> Result<Arc<dyn ObjectStore>> {
                 .with_secret_access_key(&CONFIG.aws_secret);
 
             let store = builder.build()?;
-            println!("{:?}", store);
             Ok(Arc::new(store))
         }
 

@@ -57,14 +57,11 @@ mod test_integration {
 
         let app = create_app().await?;
         let response = app.oneshot(request).await.unwrap();
-        println!("{:?}", response);
 
         let api_response: ApiResponse<String> = parse_response(response).await.unwrap();
 
         // Validate
         assert_eq!(api_response.code, StatusCode::OK);
-
-        println!("{:?}", api_response);
 
         Ok(())
     }

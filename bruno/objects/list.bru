@@ -1,21 +1,17 @@
 meta {
-  name: upload
+  name: list
   type: http
-  seq: 1
+  seq: 4
 }
 
-post {
-  url: https://localhost/objects
-  body: multipartForm
+get {
+  url: https://localhost/objects/list
+  body: none
   auth: bearer
 }
 
 auth:bearer {
   token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI4ZGUzZTUxOS00YTg3LTRlOWItOWFjNC04YmRhZGUzMmU2MjgiLCJtZmFfdmVyaWZpZWQiOnRydWUsImV4cCI6MTc2MjM5NTQwOSwiaWF0IjoxNzYyMzkzNjA5fQ.8F7W3vBISWtCTdB3i5LAWINr8L-9We5XLKRoHh0KIyo
-}
-
-body:multipart-form {
-  file: @file(/home/anthony/snap/bruno/89/Downloads/sample.pdf)
 }
 
 settings {

@@ -1,8 +1,9 @@
 use crate::{Error, Result};
 use axum::{body::Bytes, extract::Multipart};
 use oauth2::{AuthorizationCode, CsrfToken, PkceCodeVerifier};
+use serde::ser::{SerializeStruct, Serializer};
 use serde::{Deserialize, Serialize};
-use sqlx::{prelude::FromRow, PgPool, Postgres, Transaction};
+use sqlx::{prelude::FromRow, types::Uuid, PgPool, Postgres, Transaction};
 use url::Url;
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -29,11 +30,10 @@ pub struct AuthCode {
     pub code: AuthorizationCode,
     pub pkce_verifier: Option<PkceCodeVerifier>,
 }
-
-#[derive(Debug, FromRow, Serialize, Deserialize)]
+#[derive(Debug, FromRow)]
 pub struct Objects {
     pub id: i32,
-    pub user_id: i32,
+    pub user_id: Uuid,
     pub key: String,
     pub filename: String,
     // content_type: String,
@@ -41,9 +41,24 @@ pub struct Objects {
     // visibility: String,
     // created_at: chrono::DateTime<Utc>,
 }
+impl Serialize for Objects {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut s = serializer.serialize_struct("id", 3)?;
+        s.serialize_field("user_id", &self.user_id.to_string())?;
+        s.serialize_field("key", &self.key)?;
+        s.serialize_field("filename", &self.filename)?;
+        s.end()
+    }
+}
 
 impl Objects {
-    pub async fn handle_upload(mut multipart: Multipart, id: i32) -> Result<(Objects, Bytes)> {
+    pub async fn process_upload(
+        mut multipart: Multipart,
+        user_id: Uuid,
+    ) -> Result<(Objects, Bytes)> {
         // Just get the first/only field
         let field = multipart
             .next_field()
@@ -66,8 +81,8 @@ impl Objects {
         // let file_bytes = file_bytes.ok_or_else(|| Error::from("missing file field"))?;
         let object = Objects {
             id: 0,
-            user_id: id,
-            key: format!("{}/{}", id, filename), // or however you want to generate key
+            user_id: user_id,
+            key: format!("{}/{}", user_id, filename), // or however you want to generate key
             filename,
             // content_type,
             // size_bytes,

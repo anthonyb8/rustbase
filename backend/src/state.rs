@@ -15,7 +15,6 @@ pub struct AppState {
 
 impl AppState {
     pub async fn new() -> Result<Self> {
-        println!("balls");
         let config = &*CONFIG;
 
         Ok(AppState {
