@@ -72,10 +72,12 @@ pub struct AppConfig {
     //Storage
     pub postgres_url: String,
     pub redis_url: String,
-    pub object_url: String,
+    pub bucket: String,
     pub gcp_path: String,
+    pub object_url: String,
     pub aws_access: String,
     pub aws_secret: String,
+    pub aws_region: String,
 
     // Google
     pub google_client_id: ClientId,
@@ -145,10 +147,12 @@ impl AppConfig {
             // Storage
             postgres_url: get_env("POSTGRES_URL", None)?,
             redis_url: get_env("REDIS_URL", None)?,
-            object_url: get_env("OBJECT_URL", None)?,
             gcp_path: get_env("GCP_SERVICE_ACCOUNT_PATH", Some(""))?,
+            object_url: get_env("OBJECT_URL", None)?,
+            bucket: get_env("OBJECT_BUCKET", None)?,
             aws_access: get_env("AWS_ACCESS_KEY_ID", Some(""))?,
             aws_secret: get_env("AWS_SECRET_ACCESS_KEY", Some(""))?,
+            aws_region: get_env("AWS_REGION", None)?,
 
             //OAuth
             google_client_id: ClientId::new(get_env("GOOGLE_CLIENT_ID", None)?),

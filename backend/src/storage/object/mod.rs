@@ -1,5 +1,4 @@
 use crate::config::CONFIG;
-use crate::data;
 use crate::error::Error;
 use crate::error::Result;
 use axum::body::Bytes;
@@ -29,30 +28,31 @@ pub fn get_object_store(url: &str) -> Result<Arc<dyn ObjectStore>> {
 
         // AWS S3 or S3-compatible (including MinIO)
         "s3" => {
-            // let bucket = parsed
-            //     .host_str()
-            //     .ok_or_else(|| Error::from("Missing bucket"))?;
-            let bucket = "testing";
-            println!("{:?}", bucket);
-
-            let endpoint = if let Some(port) = parsed.port() {
-                Some(format!("http://{}:{}", parsed.host_str().unwrap(), port))
-            } else {
-                None
+            let endpoint = match parsed.host_str() {
+                Some(host) => {
+                    if host.contains("amazonaws.com") {
+                        // AWS S3 → HTTPS
+                        Some(format!("https://{}", host))
+                    } else {
+                        // MinIO or custom → HTTP
+                        Some(format!("http://{}:{}", host, parsed.port().unwrap_or(9000)))
+                    }
+                }
+                None => None,
             };
 
             let mut builder = AmazonS3Builder::new()
-                .with_bucket_name(bucket)
-                .with_region("us-east-1"); // or get from env/config
-
-            if let Some(ep) = endpoint {
-                builder = builder.with_endpoint(&ep).with_allow_http(true);
-            }
-
-            // For demo: credentials from env
-            builder = builder
+                .with_bucket_name(&CONFIG.bucket)
+                .with_region(&CONFIG.aws_region)
                 .with_access_key_id(&CONFIG.aws_access)
                 .with_secret_access_key(&CONFIG.aws_secret);
+
+            if let Some(ep) = endpoint {
+                builder = builder.with_endpoint(&ep);
+                if !ep.starts_with("https://") {
+                    builder = builder.with_allow_http(true); // MinIO / local dev
+                }
+            }
 
             let store = builder.build()?;
             Ok(Arc::new(store))
@@ -60,12 +60,9 @@ pub fn get_object_store(url: &str) -> Result<Arc<dyn ObjectStore>> {
 
         // Google Cloud Storage: gcs://bucket
         "gcs" => {
-            let bucket = parsed
-                .host_str()
-                .ok_or_else(|| Error::from("Missing bucket"))?;
             // Provide service account path from env/config
             let store = GoogleCloudStorageBuilder::new()
-                .with_bucket_name(bucket)
+                .with_bucket_name(&CONFIG.bucket)
                 .with_service_account_path(&CONFIG.gcp_path)
                 .build()?;
             Ok(Arc::new(store))
