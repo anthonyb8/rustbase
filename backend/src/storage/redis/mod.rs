@@ -1,4 +1,5 @@
 use crate::{
+    config::CONFIG,
     data::{Event, Flow, Token},
     error::Result,
 };
@@ -14,7 +15,7 @@ pub struct RedisClient {
 
 impl RedisClient {
     pub async fn new() -> Result<RedisClient> {
-        let client = redis::Client::open("redis://redis/")?;
+        let client = redis::Client::open(CONFIG.redis_url.clone())?;
         let conn = client.get_multiplexed_tokio_connection().await?;
         Ok(RedisClient { client, conn })
     }
