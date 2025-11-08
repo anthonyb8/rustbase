@@ -26,14 +26,14 @@ jobs:
     - name: Build and push backend image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_BACKEND_REPO: rustbase-backend
-        ECR_DATABASE_REPO: rustbase-atlas
+        ECR_BACKEND_REPO: backend
+        ECR_DATABASE_REPO: atlas-migration
       run: |
         docker compose build 
 
         # Tag them for ECR
-        docker tag $ECR_BACKEND_REPO:latest $ECR_REGISTRY/$ECR_BACKEND_REPO:latest
-        docker tag $ECR_DATABASE_REPO:latest $ECR_REGISTRY/$ECR_DATABASE_REPO:latest
+        docker tag rustbase-backend:latest $ECR_REGISTRY/$ECR_BACKEND_REPO:latest
+        docker tag rustbase-atlas:latest $ECR_REGISTRY/$ECR_DATABASE_REPO:latest
         
         # Push 
         docker push $ECR_REGISTRY/$ECR_BACKEND_REPO:latest
