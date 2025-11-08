@@ -40,18 +40,25 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_DATABASE_REPO:latest
 
     - name: Run Atlas migrations
+      env:
+        SUBNET_ID: ${{ secrets.SUBNET_ID }}
+        SECURITY_ID: ${{ secrets.SECURITY_ID }}
       run: |
-        aws ecs run-task \
+        TASK_ARN=$(aws ecs run-task \
           --cluster production \
           --task-definition atlas-migration \
           --launch-type FARGATE \
-          --network-configuration "awsvpcConfiguration={subnets=[subnet-id],securityGroups=[sg-id]}"
+          --network-configuration "awsvpcConfiguration={subnets=[$SUBNET_ID],securityGroups=[$SECURITY_ID],assignPublicIp=ENABLED}" \
+          --query 'tasks[0].taskArn' \
+          --output text)
+        
+        echo "Waiting for migration to complete..."
+        aws ecs wait tasks-stopped --cluster production --tasks $TASK_ARN
 
-    # - name: Update ECS backend service
-    #   run: |
-    #     aws ecs update-service \
-    #       --cluster production \
-    #       --service rustbase-backend \
-    #       --force-new-deployment
-
+    - name: Update ECS backend service
+      run: |
+        aws ecs update-service \
+          --cluster production \
+          --service backend-service \
+          --force-new-deployment
 
