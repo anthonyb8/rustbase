@@ -1,9 +1,13 @@
-FROM arigaio/atlas:latest
+FROM alpine:latest
 
+# Install Atlas
+RUN apk add --no-cache curl
+RUN curl -sSf https://atlasgo.sh | sh
+
+# Copy migrations
 COPY migrations /migrations
-COPY scripts/entrypoint.sh /entrypoint.sh
+COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 WORKDIR /
 ENTRYPOINT ["/entrypoint.sh"]
-
