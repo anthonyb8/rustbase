@@ -1,0 +1,21 @@
+services:
+  atlas:
+    image: arigaio/atlas
+    env_file:
+      - .env
+    volumes:
+      - ./database/migrations:/migrations
+    command: "migrate apply --url ${POSTGRES_URL} --dir file:///migrations --allow-dirty"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/logs
+      - ./backend/src:/app/src
+    ports:
+      - 8080:8080
+    command: ["./target/release/backend"]

@@ -2,7 +2,7 @@ name: Deploy to ECS
 
 on:
   push:
-    branches: [main]  # or whatever branch you want to trigger deploys
+    branches: [main]  
 
 jobs:
   deploy:
@@ -26,17 +26,22 @@ jobs:
     - name: Build and push backend image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: rustbase-backend
-        IMAGE_TAG: ${{ github.sha }}
+        ECR_BACKEND_REPO: rustbase-backend
+        ECR_DATABASE_REPO: rustbase-atlas
       run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./backend
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+        docker compose build 
 
-    - name: Update ECS service
-      run: |
-        aws ecs update-service \
-          --cluster production \
-          --service rustbase-backend \
-          --force-new-deployment
+        # Tag them for ECR
+        docker tag $ECR_BACKEND_REPO:latest $ECR_REGISTRY/$ECR_BACKEND_REPO:latest
+        docker tag $ECR_DATABASE_REPO:latest $ECR_REGISTRY/$ECR_DATABASE_REPO:latest
+        
+        # Push 
+        docker push $ECR_REGISTRY/$ECR_BACKEND_REPO:latest
+        docker push $ECR_REGISTRY/$ECR_DATABASE_REPO:latest
+
+    # - name: Update ECS service
+    #   run: |
+    #     aws ecs update-service \
+    #       --cluster production \
+    #       --service rustbase-backend \
+    #       --force-new-deployment
