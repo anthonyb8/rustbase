@@ -39,9 +39,19 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_BACKEND_REPO:latest
         docker push $ECR_REGISTRY/$ECR_DATABASE_REPO:latest
 
-    # - name: Update ECS service
+    - name: Run Atlas migrations
+      run: |
+        aws ecs run-task \
+          --cluster production \
+          --task-definition atlas-migration \
+          --launch-type FARGATE \
+          --network-configuration "awsvpcConfiguration={subnets=[subnet-id],securityGroups=[sg-id]}"
+
+    # - name: Update ECS backend service
     #   run: |
     #     aws ecs update-service \
     #       --cluster production \
     #       --service rustbase-backend \
     #       --force-new-deployment
+
+
