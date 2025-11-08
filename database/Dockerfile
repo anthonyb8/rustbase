@@ -6,8 +6,8 @@ RUN curl -sSf https://atlasgo.sh | sh
 
 # Copy migrations
 COPY migrations /migrations
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY entrypoint.sh /scripts/entrypoint.sh
+RUN chmod +x /scripts/entrypoint.sh
 
 WORKDIR /
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/scripts/entrypoint.sh"]
