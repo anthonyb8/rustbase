@@ -1,7 +1,7 @@
 FROM alpine:latest
 
 # Install Atlas
-RUN apk add --no-cache curl
+RUN apk add --no-cache bash curl
 RUN curl -sSf https://atlasgo.sh | sh
 
 # Copy migrations
