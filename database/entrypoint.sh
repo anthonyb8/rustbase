@@ -6,4 +6,4 @@ if [ -z "$POSTGRES_URL" ]; then
   exit 1
 fi
 echo "Using URL: ${POSTGRES_URL:0:20}..." >&2
-exec migrate apply --url "$POSTGRES_URL" --dir file:///migrations
+exec atlas migrate apply --url "$POSTGRES_URL" --dir file:///migrations
