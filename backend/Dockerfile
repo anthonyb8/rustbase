@@ -16,3 +16,5 @@ RUN cargo fetch
 # Copy the source code
 COPY src ./src
 RUN cargo build --release
+
+CMD ["./target/release/backend"]

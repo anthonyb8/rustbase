@@ -8,7 +8,7 @@ aws ssm get-parameters-by-path --path "/testing/prod" --with-decryption \
   echo "$key=$value"
 done >"$ENV_FILE"
 
-if ! docker compose up --build; then
+if ! docker compose up --build -d; then
   rm -rf "$ENV_FILE"
   exit 1
 fi
