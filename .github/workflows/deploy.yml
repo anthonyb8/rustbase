@@ -26,39 +26,49 @@ jobs:
     - name: Build and push backend image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_BACKEND_REPO: backend
         ECR_DATABASE_REPO: atlas-migration
+        ECR_BACKEND_REPO: backend
+        ECR_FRONTEND_REPO: frontend
       run: |
         docker compose build 
 
         # Tag them for ECR
-        docker tag rustbase-backend:latest $ECR_REGISTRY/$ECR_BACKEND_REPO:latest
         docker tag rustbase-atlas:latest $ECR_REGISTRY/$ECR_DATABASE_REPO:latest
+        docker tag rustbase-backend:latest $ECR_REGISTRY/$ECR_BACKEND_REPO:latest
+        docker tag rustbase-ui:latest $ECR_REGISTRY/$ECR_FRONTEND_REPO:latest
         
         # Push 
-        docker push $ECR_REGISTRY/$ECR_BACKEND_REPO:latest
         docker push $ECR_REGISTRY/$ECR_DATABASE_REPO:latest
+        docker push $ECR_REGISTRY/$ECR_BACKEND_REPO:latest
+        docker push $ECR_REGISTRY/$ECR_FRONTEND_REPO:latest
 
-    - name: Run Atlas migrations
-      env:
-        SUBNET_ID: ${{ secrets.SUBNET_ID }}
-        SECURITY_ID: ${{ secrets.SECURITY_ID }}
-      run: |
-        TASK_ARN=$(aws ecs run-task \
-          --cluster production \
-          --task-definition atlas-migration \
-          --launch-type FARGATE \
-          --network-configuration "awsvpcConfiguration={subnets=[$SUBNET_ID],securityGroups=[$SECURITY_ID],assignPublicIp=ENABLED}" \
-          --query 'tasks[0].taskArn' \
-          --output text)
-        
-        echo "Waiting for migration to complete..."
-        aws ecs wait tasks-stopped --cluster production --tasks $TASK_ARN
-
-    - name: Update ECS backend service
-      run: |
-        aws ecs update-service \
-          --cluster production \
-          --service backend-service \
-          --force-new-deployment
-
+    # - name: Run Atlas migrations
+    #   env:
+    #     SUBNET_ID: ${{ secrets.SUBNET_ID }}
+    #     SECURITY_ID: ${{ secrets.SECURITY_ID }}
+    #   run: |
+    #     TASK_ARN=$(aws ecs run-task \
+    #       --cluster production \
+    #       --task-definition atlas-migration \
+    #       --launch-type FARGATE \
+    #       --network-configuration "awsvpcConfiguration={subnets=[$SUBNET_ID],securityGroups=[$SECURITY_ID],assignPublicIp=ENABLED}" \
+    #       --query 'tasks[0].taskArn' \
+    #       --output text)
+    #     
+    #     echo "Waiting for migration to complete..."
+    #     aws ecs wait tasks-stopped --cluster production --tasks $TASK_ARN
+    #
+    # - name: Update ECS backend service
+    #   run: |
+    #     aws ecs update-service \
+    #       --cluster production \
+    #       --service backend-service \
+    #       --force-new-deployment
+    #
+    # # - name: Update ECS frontend service
+    # #   run: |
+    # #     aws ecs update-service \
+    # #       --cluster production \
+    # #       --service backend-service \
+    # #       --force-new-deployment
+    #

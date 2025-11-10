@@ -54,7 +54,8 @@ services:
     command: server /data --console-address ":9001"
     networks:
       - backend-net
-
+  
+  # UI
   nginx-proxy:
     image: nginx:stable-alpine
     container_name: nginx_proxy
@@ -72,6 +73,25 @@ services:
     profiles:
       - dev
       - dev_backend
+  
+  ui:
+    build: 
+      context: ./ui 
+      dockerfile: Dockerfile.dev 
+    environment: 
+      VITE_BACKEND_URL: /api
+    networks:
+      - frontend-net 
+    volumes:
+      - ./ui:/ui
+      - node-modules:/ui/node-modules
+    profiles:
+      - dev 
+    command: > 
+      sh -c " 
+        npm install;
+        npm run dev -- --host 0.0.0.0 --port 5173
+      "
 
   # Application
   backend:
@@ -105,6 +125,7 @@ volumes:
   postgres-data:
   redis-data:
   minio-data:
+  node-modules: 
 
 networks:
   frontend-net:
