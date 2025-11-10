@@ -4,8 +4,6 @@ import { CircleCheck } from "lucide-react";
 import { CircleX } from "lucide-react";
 import "./App.css";
 
-// const API_URL: String = import.meta.env.VITE_BACKEND_URL;
-
 function App() {
   const [status, setStatus] = useState<Boolean | null>(null);
 
