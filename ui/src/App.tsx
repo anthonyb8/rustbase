@@ -4,13 +4,13 @@ import { CircleCheck } from "lucide-react";
 import { CircleX } from "lucide-react";
 import "./App.css";
 
-const API_URL: String = import.meta.env.VITE_BACKEND_URL;
+// const API_URL: String = import.meta.env.VITE_BACKEND_URL;
 
 function App() {
   const [status, setStatus] = useState<Boolean | null>(null);
 
   const checkStatus = async () => {
-    const response = await fetch(`${API_URL}/health`);
+    const response = await fetch(`/api/health`);
 
     if (response.ok) {
       setStatus(true);
